@@ -83,9 +83,46 @@ tr:hover td{background:rgba(79,172,254,0.05)}
 .voice-card .v-body{font-size:12.5px;line-height:1.7;color:rgba(255,255,255,0.65)}
 .voice-card .v-body em{font-style:normal;color:rgba(255,255,255,0.9)}
 @media(max-width:768px){.header h1{font-size:18px}.kpi .val{font-size:22px}.grid2{grid-template-columns:1fr}.chart-box{height:260px}.dept-grid{grid-template-columns:1fr}.voice-grid{grid-template-columns:1fr}}
+.pw-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);z-index:9999;display:flex;align-items:center;justify-content:center}
+.pw-overlay.hidden{display:none}
+.pw-box{background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:48px 40px;text-align:center;max-width:400px;width:90%}
+.pw-box h2{color:#fff;font-size:20px;font-weight:500;margin-bottom:6px}
+.pw-box .pw-sub{color:rgba(255,255,255,0.45);font-size:13px;margin-bottom:28px}
+.pw-box input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:15px;font-family:inherit;outline:none;text-align:center;letter-spacing:2px;margin-bottom:16px}
+.pw-box input:focus{border-color:#4facfe}
+.pw-box input::placeholder{color:rgba(255,255,255,0.25);letter-spacing:0}
+.pw-box button{width:100%;padding:12px;background:linear-gradient(135deg,#4facfe,#00f2fe);border:none;border-radius:10px;color:#0f3460;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.pw-box button:hover{opacity:0.9}
+.pw-box .pw-err{color:#f5576c;font-size:12px;margin-top:10px;min-height:18px}
+.pw-logo{font-size:28px;font-weight:700;color:#4facfe;margin-bottom:4px;letter-spacing:2px}
+.main-content{display:none}
+.main-content.visible{display:block}
+.pdf-section{margin-top:16px}
+.pdf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.pdf-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;text-decoration:none}
+.pdf-card:hover{background:rgba(79,172,254,0.1);border-color:rgba(79,172,254,0.25)}
+.pdf-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.pdf-icon.red{background:rgba(245,87,108,0.15);color:#f5576c}
+.pdf-icon.blue{background:rgba(79,172,254,0.15);color:#4facfe}
+.pdf-icon.green{background:rgba(67,233,123,0.15);color:#43e97b}
+.pdf-card .pdf-info{flex:1}
+.pdf-card .pdf-title{font-size:13px;font-weight:500;color:rgba(255,255,255,0.85)}
+.pdf-card .pdf-desc{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+.pdf-card .pdf-arrow{color:rgba(255,255,255,0.25);font-size:18px}
 </style>
 </head>
 <body>
+<div class="pw-overlay" id="pwOverlay">
+<div class="pw-box">
+<div class="pw-logo">NETZ MIE</div>
+<h2>営業会議ダッシュボード</h2>
+<div class="pw-sub">閲覧にはパスワードが必要です</div>
+<input type="password" id="pwInput" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')checkPw()">
+<button onclick="checkPw()">ログイン</button>
+<div class="pw-err" id="pwErr"></div>
+</div>
+</div>
+<div class="main-content" id="mainContent">
 <div class="container">
 <div class="header">
 <div>
@@ -191,6 +228,38 @@ tr:hover td{background:rgba(79,172,254,0.05)}
 </div>
 </div>
 
+<div class="pdf-section">
+<div class="card">
+<h3>関連資料・マニュアル</h3>
+<div class="pdf-grid">
+<a class="pdf-card" href="docs/trouble_guide.pdf" target="_blank">
+<div class="pdf-icon red">PDF</div>
+<div class="pdf-info">
+<div class="pdf-title">愛車売却トラブル防止ガイド</div>
+<div class="pdf-desc">お客様向け・店頭使用資料</div>
+</div>
+<div class="pdf-arrow">></div>
+</a>
+<a class="pdf-card" href="docs/bz4x_campaign.pdf" target="_blank">
+<div class="pdf-icon blue">PDF</div>
+<div class="pdf-info">
+<div class="pdf-title">bZ4Xオーナー体験 インナーキャンペーンマニュアル</div>
+<div class="pdf-desc">2026年3月1日〜6月30日</div>
+</div>
+<div class="pdf-arrow">></div>
+</a>
+<a class="pdf-card" href="docs/insurance_news.pdf" target="_blank">
+<div class="pdf-icon green">PDF</div>
+<div class="pdf-info">
+<div class="pdf-title">保険 好事例・好取組 NEWS（1月分）</div>
+<div class="pdf-desc">四日市店・松阪店・名張店・尾鷲店</div>
+</div>
+<div class="pdf-arrow">></div>
+</a>
+</div>
+</div>
+</div>
+
 </div>
 
 <div id="tab-sales" class="tab-content">
@@ -261,6 +330,7 @@ tr:hover td{background:rgba(79,172,254,0.05)}
 <div class="card"><h3>スタッフ別ミエイチ評価</h3><div style="overflow-x:auto;max-height:600px;overflow-y:auto" id="tableMieichi"></div></div>
 </div>
 
+</div>
 </div>
 
 <script>
@@ -562,6 +632,27 @@ setTimeout(()=>{Object.values(charts).forEach(c=>{if(c&&c.resize)c.resize()})},1
 
 populateStoreSelect();
 updateDashboard();
+
+function checkPw(){
+const input=document.getElementById('pwInput').value;
+const hash=Array.from(input).reduce((h,c)=>(h*31+c.charCodeAt(0))&0x7fffffff,0);
+if(input==='netz2026'){
+document.getElementById('pwOverlay').classList.add('hidden');
+document.getElementById('mainContent').classList.add('visible');
+sessionStorage.setItem('pw_ok','1');
+setTimeout(()=>{Object.values(charts).forEach(c=>{if(c&&c.resize)c.resize()})},200);
+}else{
+document.getElementById('pwErr').textContent='パスワードが違います';
+document.getElementById('pwInput').value='';
+document.getElementById('pwInput').focus();
+}
+}
+if(sessionStorage.getItem('pw_ok')==='1'){
+document.getElementById('pwOverlay').classList.add('hidden');
+document.getElementById('mainContent').classList.add('visible');
+}else{
+document.getElementById('pwInput').focus();
+}
 </script>
 </body>
 </html>
