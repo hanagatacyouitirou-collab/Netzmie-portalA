@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ネッツトヨタ三重 営業会議ダッシュボード 2026年3月度</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;padding:16px;color:#e0e0e0}
+.container{max-width:1400px;margin:0 auto}
+.header{background:rgba(255,255,255,0.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);padding:24px 30px;border-radius:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.header h1{font-size:22px;font-weight:700;color:#fff;letter-spacing:1px}
+.header .sub{font-size:13px;color:rgba(255,255,255,0.5)}
+.store-select{display:flex;align-items:center;gap:10px}
+.store-select label{font-size:13px;color:rgba(255,255,255,0.6)}
+.store-select select{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 16px;border-radius:8px;font-size:14px;font-family:inherit;cursor:pointer;outline:none}
+.store-select select:focus{border-color:#4facfe}
+.store-select select option{background:#16213e;color:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;cursor:pointer;transition:all .3s;font-family:inherit}
+.tab-btn:hover{background:rgba(79,172,254,0.15);color:#4facfe;border-color:rgba(79,172,254,0.3)}
+.tab-btn.active{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#0f3460;border-color:transparent;font-weight:700}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:rgba(255,255,255,0.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:18px 16px;text-align:center;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.blue::before{background:linear-gradient(90deg,#4facfe,#00f2fe)}
+.kpi.green::before{background:linear-gradient(90deg,#43e97b,#38f9d7)}
+.kpi.purple::before{background:linear-gradient(90deg,#667eea,#764ba2)}
+.kpi.orange::before{background:linear-gradient(90deg,#f093fb,#f5576c)}
+.kpi.amber::before{background:linear-gradient(90deg,#ffd89b,#f7971e)}
+.kpi .val{font-size:28px;font-weight:700;color:#fff;line-height:1.2}
+.kpi .lbl{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px}
+.kpi .sub-val{font-size:12px;margin-top:2px}
+.up{color:#43e97b}
+.down{color:#f5576c}
+.card{background:rgba(255,255,255,0.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:15px;font-weight:500;color:rgba(255,255,255,0.8);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.chart-box{position:relative;height:320px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(79,172,254,0.15);color:#4facfe;padding:10px 8px;text-align:center;font-weight:500;position:sticky;top:0}
+td{padding:8px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+tr:hover td{background:rgba(79,172,254,0.05)}
+.highlight{background:rgba(79,172,254,0.12)!important}
+.bar-cell{position:relative}
+.bar-bg{position:absolute;left:0;top:2px;bottom:2px;border-radius:4px;opacity:0.2}
+.bar-fill{position:absolute;left:0;top:2px;bottom:2px;border-radius:4px;opacity:0.6}
+.eval-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.eval-S{background:rgba(255,215,0,0.2);color:#ffd700}
+.eval-A{background:rgba(67,233,123,0.2);color:#43e97b}
+.eval-B{background:rgba(79,172,254,0.2);color:#4facfe}
+.eval-C{background:rgba(255,152,0,0.2);color:#ff9800}
+.eval-D{background:rgba(245,87,108,0.2);color:#f5576c}
+.msg-box{background:rgba(255,255,255,0.04);border-left:3px solid #4facfe;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;line-height:1.8;color:rgba(255,255,255,0.7)}
+.msg-box strong{color:#fff}
+.dept-section{margin-top:24px}
+.dept-section h2{font-size:18px;font-weight:500;color:#fff;margin-bottom:16px;padding-left:4px}
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.dept-card{background:rgba(255,255,255,0.07);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+.dept-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.dept-card.c-sales::before{background:linear-gradient(90deg,#4facfe,#00f2fe)}
+.dept-card.c-service::before{background:linear-gradient(90deg,#43e97b,#38f9d7)}
+.dept-card.c-floor::before{background:linear-gradient(90deg,#f093fb,#f5576c)}
+.dept-card.c-admin::before{background:linear-gradient(90deg,#ffd89b,#f7971e)}
+.dept-card.c-ceo::before{background:linear-gradient(90deg,#667eea,#764ba2)}
+.dept-card .d-label{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;margin-bottom:10px}
+.dept-card.c-sales .d-label{background:rgba(79,172,254,0.15);color:#4facfe}
+.dept-card.c-service .d-label{background:rgba(67,233,123,0.15);color:#43e97b}
+.dept-card.c-floor .d-label{background:rgba(240,147,251,0.15);color:#f093fb}
+.dept-card.c-admin .d-label{background:rgba(255,216,155,0.15);color:#f7971e}
+.dept-card.c-ceo .d-label{background:rgba(102,126,234,0.15);color:#667eea}
+.dept-card .d-body{font-size:13px;line-height:1.8;color:rgba(255,255,255,0.65)}
+.dept-card .d-body strong{color:rgba(255,255,255,0.9)}
+.voice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:16px}
+.voice-card{background:rgba(255,255,255,0.05);border-radius:10px;padding:16px 18px;border:1px solid rgba(255,255,255,0.06)}
+.voice-card .v-head{font-size:11px;font-weight:700;margin-bottom:6px}
+.voice-card .v-head.good{color:#43e97b}
+.voice-card .v-head.improve{color:#f7971e}
+.voice-card .v-body{font-size:12.5px;line-height:1.7;color:rgba(255,255,255,0.65)}
+.voice-card .v-body em{font-style:normal;color:rgba(255,255,255,0.9)}
+@media(max-width:768px){.header h1{font-size:18px}.kpi .val{font-size:22px}.grid2{grid-template-columns:1fr}.chart-box{height:260px}.dept-grid{grid-template-columns:1fr}.voice-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<div>
+<h1>ネッツトヨタ三重 営業会議ダッシュボード</h1>
+<div class="sub">2026年3月度（2月27日）営業会議資料より</div>
+</div>
+<div class="store-select">
+<label>店舗を選択</label>
+<select id="storeSelect" onchange="updateDashboard()">
+<option value="ALL">全社</option>
+</select>
+</div>
+</div>
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab(event,'tab-overview')">経営概況</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-sales')">車両販売</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-insurance')">保険</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-kappu')">割賦</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-service')">サービス</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-cs')">CS・アンケート</button>
+<button class="tab-btn" onclick="switchTab(event,'tab-mieichi')">ミエイチ評価</button>
+</div>
+
+<div id="tab-overview" class="tab-content active">
+<div class="kpi-row" id="kpi-overview"></div>
+<div class="card">
+<h3>社長メッセージ（要旨）</h3>
+<div class="msg-box">
+<strong>経営理念・ビジョンV60</strong>：社員ともお客様とも「一生のお付き合い」＋三重で一番のクルマ屋さんになる<br>
+<strong>重点</strong>：「サービス中心」でお客様と繋がっていく ／ S層30,000人を目指す ／ ミエイチPJの継続拡大<br>
+<strong>増販期</strong>：受注を伸ばす！bZ4Xで県内他社に負けない！<br>
+<strong>CS</strong>：三重県No.1に向けて具体策を実施＆継続<br>
+<strong>安全</strong>：構内事故・災害ゼロ ／ コンプライアンス徹底・パワハラ撲滅
+</div>
+</div>
+<div class="grid2">
+<div class="card"><h3>店舗別 新車受注達成率</h3><div class="chart-box"><canvas id="chartOverviewNC"></canvas></div></div>
+<div class="card"><h3>店舗別 VC率（サービス）1月実績</h3><div class="chart-box"><canvas id="chartOverviewVC"></canvas></div></div>
+</div>
+
+<div class="dept-section">
+<h2>各部署からのメッセージ</h2>
+<div class="dept-grid">
+
+<div class="dept-card c-ceo">
+<div class="d-label">社長メッセージ</div>
+<div class="d-body">
+<strong>増販期を活かし受注を伸ばす。</strong>bZ4Xで県内他社に負けない！<br>
+「サービス中心」でお客様と繋がり、S層30,000人を目指す。<br>
+ミエイチPJの継続拡大で「お客様の事を一番理解しているネッツトヨタ三重」に。
+</div>
+</div>
+
+<div class="dept-card c-sales">
+<div class="d-label">営業部（車両・割賦・保険・UC）</div>
+<div class="d-body">
+<strong>年度末決算の完遂と税制改正対応。</strong>4月の環境性能割廃止を見据え、現行税制での契約を推進。<br>
+<strong>割賦：</strong>コストシミュレーションシートの提案内容を店長が把握すること。KINTO U-35活用。<br>
+<strong>保険：</strong>提案の前にまず「証券点検」をマスト。点検→提案→獲得の仕組み化。<br>
+<strong>UC：</strong>下取獲得の店舗差を縮小。かえちゃった査定のフォロー実施。
+</div>
+</div>
+
+<div class="dept-card c-service">
+<div class="d-label">サービスG・BPセンター</div>
+<div class="d-body">
+<strong>リスト防衛率の向上と値引き圧縮（トータル3%以下）。</strong><br>
+車検の標準手順を展開予定。エンジニアが安心して働ける環境整備。<br>
+4/1より部品価格値上げ。4月以降の交換部品を含む修理見積りの確認を。<br>
+メンパ解約が4ヶ月で150件超。店舗で解約防止策の話し合いを。
+</div>
+</div>
+
+<div class="dept-card c-floor">
+<div class="d-label">ミエイチ人財育成部 / フロアスタッフG</div>
+<div class="d-body">
+<strong>繁忙期こそ「予習の習慣化」を崩さない。</strong><br>
+3つの共通オペレーション（お出迎え・ドリンク・証券点検/616）の徹底。<br>
+第10回ハートフルネッツMTG：3/18-19 ／ 第11回：4/9-10予定<br>
+フロアスタッフステップアップ制度面談：4/1〜17日
+</div>
+</div>
+
+<div class="dept-card c-admin">
+<div class="d-label">管理部（総務・経理・企画IT）</div>
+<div class="d-body">
+<strong>確定拠出年金（DC）退職前セミナー</strong>のご案内（3/13・18・23）<br>
+振替出勤日の半日有休申請ルールの再確認（時間有休で申請）<br>
+全社員大会「ありがとうエピソード」募集中（〆切3/31）<br>
+<strong>通信春キャンペーン：</strong>2/20〜4/12 目標203台。全員参加で！
+</div>
+</div>
+
+<div class="dept-card c-sales">
+<div class="d-label">業務グループ</div>
+<div class="d-body">
+新車・ユーカー見込み報告：<strong>18日(水)・24日(火) 正午〆切</strong><br>
+今後の営業会議：04月度 3/27(金)、05月度 4/24(金)、06月度 5/29(金)<br>
+新型ノア/ヴォクシー対応注文書配付済み。現在の注文書はその他車種で継続使用。
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<div id="tab-sales" class="tab-content">
+<div class="kpi-row" id="kpi-sales"></div>
+<div class="grid2">
+<div class="card"><h3>新車 受注割当 vs 見込み</h3><div class="chart-box"><canvas id="chartSalesNC"></canvas></div></div>
+<div class="card"><h3>新車 登録割当 vs 見込み</h3><div class="chart-box"><canvas id="chartSalesReg"></canvas></div></div>
+</div>
+<div class="card"><h3>店舗別 販売実績一覧</h3><div style="overflow-x:auto" id="tableSales"></div></div>
+</div>
+
+<div id="tab-insurance" class="tab-content">
+<div class="kpi-row" id="kpi-ins"></div>
+<div class="grid2">
+<div class="card"><h3>新規獲得 目標 vs 実績</h3><div class="chart-box"><canvas id="chartInsNew"></canvas></div></div>
+<div class="card"><h3>継続率（2月満期・3月満期）</h3><div class="chart-box"><canvas id="chartInsCont"></canvas></div></div>
+</div>
+</div>
+
+<div id="tab-kappu" class="tab-content">
+<div class="kpi-row" id="kpi-kappu"></div>
+<div class="grid2">
+<div class="card"><h3>手数料 目標 vs 獲得</h3><div class="chart-box"><canvas id="chartKappuFee"></canvas></div></div>
+<div class="card"><h3>割賦比率・残価比率</h3><div class="chart-box"><canvas id="chartKappuRate"></canvas></div></div>
+</div>
+</div>
+
+<div id="tab-service" class="tab-content">
+<div class="kpi-row" id="kpi-sv"></div>
+<div class="grid2">
+<div class="card"><h3>売上達成率 vs 利益達成率</h3><div class="chart-box"><canvas id="chartSvRate"></canvas></div></div>
+<div class="card"><h3>リスト防衛率</h3><div class="chart-box"><canvas id="chartSvDefense"></canvas></div></div>
+</div>
+</div>
+
+<div id="tab-cs" class="tab-content">
+<div class="kpi-row" id="kpi-cs"></div>
+<div class="grid2">
+<div class="card"><h3>QRアンケート 月別推移</h3><div class="chart-box"><canvas id="chartCSTrend"></canvas></div></div>
+<div class="card"><h3>目標 vs 2月実績</h3><div class="chart-box"><canvas id="chartCSTarget"></canvas></div></div>
+</div>
+<div class="card">
+<h3>お客様の声（2月度 代表的なご意見）</h3>
+<div style="margin-bottom:12px;font-size:13px;color:rgba(255,255,255,0.5)">QRアンケートに寄せられた声から、各店舗の好事例と改善点を抜粋</div>
+<div style="font-size:14px;color:#43e97b;font-weight:500;margin:16px 0 10px">好評価・感動の声</div>
+<div class="voice-grid">
+<div class="voice-card"><div class="v-head good">津店</div><div class="v-body"><em>車まで走ってお出迎え</em>していただき、帰りは見えなくなるまでお見送り。とても良い店！感動しました！</div></div>
+<div class="voice-card"><div class="v-head good">津北店</div><div class="v-body">対応した職員が<em>神</em>。いつも親切丁寧、居心地抜群。場所、規模、スタッフ、全てが良い。<em>存続して欲しい</em></div></div>
+<div class="voice-card"><div class="v-head good">鈴鹿店</div><div class="v-body">受付から整備終了まで、スタッフの方々が<em>顧客情報を共有</em>しているところが改善、より良いお店に繋がっていると思いました</div></div>
+<div class="voice-card"><div class="v-head good">伊勢店</div><div class="v-body">遅がけに預けに行った際、対応してくれた女の子がとても素晴らしい。寒い夜だったが<em>嫌な顔一つせず丁寧な応対で笑顔が素敵</em>。代車も用意してくれて見送りまで</div></div>
+<div class="voice-card"><div class="v-head good">名張店</div><div class="v-body">女性スタッフの方から<em>家族での写真を提案</em>されてとても嬉しかった。お気遣いありがとうございました。安心してお任せできます</div></div>
+<div class="voice-card"><div class="v-head good">津店</div><div class="v-body">聞きづらい飲み物のおかわりを聞いてもらいました！<em>気遣いが素晴らしい！！</em>ありがとうございました</div></div>
+</div>
+<div style="font-size:14px;color:#f7971e;font-weight:500;margin:20px 0 10px">改善のご要望</div>
+<div class="voice-grid">
+<div class="voice-card"><div class="v-head improve">伊勢店</div><div class="v-body">受付をしたらそれで良いのか？目の前にいるのに<em>挨拶すらなかった</em>。パンツスーツの女性の方はどんな来店客にも丁寧に対応していた。その方に対応してもらいたかった</div></div>
+<div class="voice-card"><div class="v-head improve">津店</div><div class="v-body">受付自体は丁寧ですが、<em>知識面での案内が不足</em>していると感じる場面があります。基本的なサービス内容については受付の方でも対応できる体制に</div></div>
+<div class="voice-card"><div class="v-head improve">津店</div><div class="v-body">土曜日の朝イチバンの予約で来店したが、<em>誰も受付する人がいなかった</em>のと、予約していても時間がかかっていた。予約客優先してほしい</div></div>
+<div class="voice-card"><div class="v-head improve">鈴鹿店</div><div class="v-body">最初に迎えにきてくださったスタッフが、<em>今日の内容と所要時間を把握されていなかった</em>ので少し不安に。こちらから伝えたらすぐわかってくださいました</div></div>
+<div class="voice-card"><div class="v-head improve">伊勢店</div><div class="v-body">整備スタッフの<em>技術的説明が的確でない</em>。経験不足気味で説明が稚拙。整備スタッフの能力差が大きい。標準化して欲しい</div></div>
+<div class="voice-card"><div class="v-head improve">名張店</div><div class="v-body">走行中の音が鳴るので見て頂きたかったが<em>わからないみたい</em>だったのでちょっと不安。気になる事が解決できなかった</div></div>
+</div>
+</div>
+</div>
+
+<div id="tab-mieichi" class="tab-content">
+<div class="kpi-row" id="kpi-mie"></div>
+<div class="card"><h3>スタッフ別ミエイチ評価</h3><div style="overflow-x:auto;max-height:600px;overflow-y:auto" id="tableMieichi"></div></div>
+</div>
+
+</div>
+
+<script>
+const STORES=["桑名","員弁","四日市","四日市南","四インター","鈴鹿","津北","津","久居インター","松阪","松南","伊勢","志摩","上野","名張","尾鷲","熊野"];
+
+const DATA_NC=[
+{s:"桑名",prev:85,ord_q:25,ord_f:20,ord_r:80.0,reg_q:25,reg_f:22,reg_r:88.0,uc_q:3,uc_f:2},
+{s:"員弁",prev:66,ord_q:16,ord_f:16,ord_r:100.0,reg_q:13,reg_f:17,reg_r:130.8,uc_q:2,uc_f:1},
+{s:"四日市",prev:115,ord_q:33,ord_f:27,ord_r:81.8,reg_q:32,reg_f:27,reg_r:84.4,uc_q:3,uc_f:1},
+{s:"四日市南",prev:89,ord_q:24,ord_f:11,ord_r:45.8,reg_q:24,reg_f:18,reg_r:75.0,uc_q:2,uc_f:1},
+{s:"四インター",prev:44,ord_q:6,ord_f:10,ord_r:166.7,reg_q:6,reg_f:10,reg_r:166.7,uc_q:1,uc_f:2},
+{s:"鈴鹿",prev:140,ord_q:35,ord_f:34,ord_r:97.1,reg_q:34,reg_f:31,reg_r:91.2,uc_q:2,uc_f:3},
+{s:"津北",prev:59,ord_q:15,ord_f:19,ord_r:126.7,reg_q:14,reg_f:15,reg_r:107.1,uc_q:3,uc_f:3},
+{s:"津",prev:151,ord_q:40,ord_f:30,ord_r:75.0,reg_q:39,reg_f:57,reg_r:146.2,uc_q:3,uc_f:1},
+{s:"久居インター",prev:34,ord_q:12,ord_f:7,ord_r:58.3,reg_q:12,reg_f:12,reg_r:100.0,uc_q:3,uc_f:9},
+{s:"松阪",prev:84,ord_q:26,ord_f:22,ord_r:84.6,reg_q:25,reg_f:24,reg_r:96.0,uc_q:2,uc_f:2},
+{s:"松南",prev:107,ord_q:26,ord_f:28,ord_r:107.7,reg_q:25,reg_f:24,reg_r:96.0,uc_q:2,uc_f:0},
+{s:"伊勢",prev:114,ord_q:28,ord_f:19,ord_r:67.9,reg_q:28,reg_f:33,reg_r:117.9,uc_q:3,uc_f:1},
+{s:"志摩",prev:55,ord_q:12,ord_f:11,ord_r:91.7,reg_q:11,reg_f:42,reg_r:381.8,uc_q:5,uc_f:9},
+{s:"上野",prev:62,ord_q:19,ord_f:14,ord_r:73.7,reg_q:20,reg_f:11,reg_r:55.0,uc_q:2,uc_f:0},
+{s:"名張",prev:94,ord_q:26,ord_f:22,ord_r:84.6,reg_q:25,reg_f:26,reg_r:104.0,uc_q:2,uc_f:0},
+{s:"尾鷲",prev:58,ord_q:11,ord_f:12,ord_r:109.1,reg_q:11,reg_f:22,reg_r:200.0,uc_q:1,uc_f:0},
+{s:"熊野",prev:18,ord_q:3,ord_f:2,ord_r:66.7,reg_q:3,reg_f:7,reg_r:233.3,uc_q:0,uc_f:0}
+];
+
+const DATA_INS=[
+{s:"桑名",tgt:8,act:7,r:87.5,avg:129,c2_t:20,c2_a:19,c2_r:95.0,c3_t:32,c3_a:27,c3_r:84.4},
+{s:"員弁",tgt:6,act:0,r:0,avg:0,c2_t:6,c2_a:5,c2_r:83.3,c3_t:26,c3_a:20,c3_r:76.9},
+{s:"四日市",tgt:9,act:10,r:111.1,avg:90,c2_t:16,c2_a:14,c2_r:87.5,c3_t:22,c3_a:14,c3_r:63.6},
+{s:"四日市南",tgt:8,act:2,r:25.0,avg:83,c2_t:18,c2_a:17,c2_r:94.4,c3_t:39,c3_a:31,c3_r:79.5},
+{s:"四インター",tgt:2,act:2,r:100,avg:65,c2_t:4,c2_a:4,c2_r:100,c3_t:10,c3_a:7,c3_r:70.0},
+{s:"鈴鹿",tgt:10,act:7,r:70.0,avg:94,c2_t:19,c2_a:18,c2_r:94.7,c3_t:30,c3_a:16,c3_r:53.3},
+{s:"津北",tgt:5,act:2,r:40.0,avg:83,c2_t:19,c2_a:18,c2_r:94.7,c3_t:28,c3_a:17,c3_r:60.7},
+{s:"津",tgt:12,act:20,r:166.7,avg:172,c2_t:33,c2_a:30,c2_r:90.9,c3_t:81,c3_a:55,c3_r:67.9},
+{s:"久居インター",tgt:3,act:3,r:100,avg:165,c2_t:7,c2_a:7,c2_r:100,c3_t:16,c3_a:13,c3_r:81.3},
+{s:"松阪",tgt:7,act:8,r:114.3,avg:92,c2_t:10,c2_a:11,c2_r:110,c3_t:27,c3_a:17,c3_r:63.0},
+{s:"松南",tgt:7,act:4,r:57.1,avg:135,c2_t:16,c2_a:15,c2_r:93.8,c3_t:31,c3_a:26,c3_r:83.9},
+{s:"伊勢",tgt:8,act:5,r:62.5,avg:148,c2_t:28,c2_a:24,c2_r:85.7,c3_t:46,c3_a:20,c3_r:43.5},
+{s:"志摩",tgt:3,act:1,r:33.3,avg:139,c2_t:9,c2_a:7,c2_r:77.8,c3_t:22,c3_a:9,c3_r:40.9},
+{s:"上野",tgt:6,act:5,r:83.3,avg:105,c2_t:13,c2_a:10,c2_r:76.9,c3_t:33,c3_a:27,c3_r:81.8},
+{s:"名張",tgt:7,act:4,r:57.1,avg:99,c2_t:19,c2_a:17,c2_r:89.5,c3_t:33,c3_a:24,c3_r:72.7},
+{s:"尾鷲",tgt:3,act:2,r:66.7,avg:68,c2_t:12,c2_a:12,c2_r:100,c3_t:11,c3_a:10,c3_r:90.9},
+{s:"熊野",tgt:0,act:0,r:0,avg:0,c2_t:7,c2_a:6,c2_r:85.7,c3_t:3,c3_a:3,c3_r:100}
+];
+
+const DATA_KAPPU=[
+{s:"桑名",tgt:1980,act:1728,r:87.3,ratio:22.2,zan:16.7},
+{s:"員弁",tgt:1320,act:1596,r:120.9,ratio:30.8,zan:23.1},
+{s:"四日市",tgt:2640,act:2290,r:86.8,ratio:35.0,zan:35.0},
+{s:"四日市南",tgt:1980,act:877,r:44.3,ratio:11.1,zan:11.1},
+{s:"四インター",tgt:660,act:607,r:91.9,ratio:9.1,zan:9.1},
+{s:"鈴鹿",tgt:2860,act:1041,r:36.4,ratio:6.1,zan:6.1},
+{s:"津北",tgt:1320,act:601,r:45.5,ratio:5.9,zan:5.9},
+{s:"津",tgt:3080,act:2744,r:89.1,ratio:16.7,zan:12.5},
+{s:"久居インター",tgt:1100,act:947,r:86.1,ratio:50.0,zan:0},
+{s:"松阪",tgt:1980,act:807,r:40.8,ratio:11.8,zan:5.9},
+{s:"松南",tgt:1980,act:528,r:26.7,ratio:4.0,zan:4.0},
+{s:"伊勢",tgt:2200,act:736,r:33.5,ratio:13.3,zan:6.7},
+{s:"志摩",tgt:1100,act:1105,r:100.5,ratio:30.0,zan:10.0},
+{s:"上野",tgt:1540,act:1506,r:97.8,ratio:50.0,zan:40.0},
+{s:"名張",tgt:1980,act:1395,r:70.5,ratio:27.3,zan:18.2},
+{s:"尾鷲",tgt:1100,act:0,r:0,ratio:0,zan:0},
+{s:"熊野",tgt:440,act:0,r:0,ratio:0,zan:0}
+];
+
+const DATA_SV=[
+{s:"桑名",sale:102.2,prof:98.5,pp_s:2385,pp_p:747,vc:48.5,def:55.0,ini_v:71.4,ini_12:39.4},
+{s:"員弁",sale:114.6,prof:131.9,pp_s:2379,pp_p:877,vc:52.4,def:39.3,ini_v:43.8,ini_12:31.6},
+{s:"四日市",sale:89.3,prof:91.1,pp_s:2004,pp_p:725,vc:34.4,def:46.5,ini_v:35.3,ini_12:32.5},
+{s:"四日市南",sale:111.7,prof:117.8,pp_s:2118,pp_p:729,vc:45.6,def:49.0,ini_v:52.9,ini_12:28.0},
+{s:"四インター",sale:97.2,prof:109.0,pp_s:1847,pp_p:625,vc:31.6,def:50.8,ini_v:55.6,ini_12:30.0},
+{s:"鈴鹿",sale:104.9,prof:92.8,pp_s:2438,pp_p:731,vc:41.8,def:36.9,ini_v:50.0,ini_12:25.9},
+{s:"津北",sale:105.9,prof:117.4,pp_s:2330,pp_p:918,vc:64.4,def:56.3,ini_v:66.7,ini_12:44.4},
+{s:"津",sale:101.7,prof:112.8,pp_s:2669,pp_p:1051,vc:61.8,def:54.8,ini_v:66.7,ini_12:34.0},
+{s:"久居インター",sale:89.3,prof:84.5,pp_s:1751,pp_p:575,vc:42.4,def:50.9,ini_v:55.6,ini_12:35.7},
+{s:"松阪",sale:105.4,prof:117.3,pp_s:2756,pp_p:1074,vc:64.2,def:51.3,ini_v:40.0,ini_12:39.1},
+{s:"松南",sale:103.4,prof:110.6,pp_s:2448,pp_p:854,vc:51.1,def:40.7,ini_v:59.1,ini_12:17.6},
+{s:"伊勢",sale:99.5,prof:110.8,pp_s:2718,pp_p:1075,vc:58.5,def:46.9,ini_v:51.9,ini_12:26.9},
+{s:"志摩",sale:108.9,prof:108.4,pp_s:1906,pp_p:656,vc:59.7,def:39.6,ini_v:44.4,ini_12:57.1},
+{s:"上野",sale:104.9,prof:111.2,pp_s:2522,pp_p:890,vc:42.8,def:57.0,ini_v:68.8,ini_12:46.2},
+{s:"名張",sale:111.3,prof:124.0,pp_s:2675,pp_p:1057,vc:61.4,def:61.5,ini_v:76.9,ini_12:61.5},
+{s:"尾鷲",sale:88.0,prof:77.4,pp_s:1518,pp_p:428,vc:27.9,def:42.4,ini_v:66.7,ini_12:62.5}
+];
+
+const DATA_CS=[
+{s:"桑名",tgt:35,m11:16,m12:27,m1:15,m2:11},
+{s:"員弁",tgt:25,m11:44,m12:58,m1:27,m2:30},
+{s:"四日市",tgt:40,m11:30,m12:28,m1:25,m2:12},
+{s:"四日市南",tgt:35,m11:36,m12:22,m1:34,m2:19},
+{s:"鈴鹿",tgt:50,m11:43,m12:43,m1:42,m2:25},
+{s:"津北",tgt:25,m11:63,m12:40,m1:35,m2:29},
+{s:"津",tgt:50,m11:32,m12:20,m1:16,m2:24},
+{s:"久居インター",tgt:20,m11:22,m12:25,m1:20,m2:14},
+{s:"松阪",tgt:35,m11:13,m12:48,m1:10,m2:19},
+{s:"松南",tgt:35,m11:56,m12:65,m1:39,m2:26},
+{s:"伊勢",tgt:40,m11:80,m12:65,m1:55,m2:35},
+{s:"志摩",tgt:20,m11:13,m12:8,m1:5,m2:8},
+{s:"上野",tgt:35,m11:38,m12:30,m1:23,m2:17},
+{s:"名張",tgt:35,m11:80,m12:38,m1:34,m2:28},
+{s:"尾鷲",tgt:20,m11:29,m12:40,m1:28,m2:27}
+];
+
+const DATA_MIE=[
+{s:"桑名店",name:"加藤 文崇",pre:"〇",men:"〇",res:"◎",sch:"〇",man:"〇",cs:"〇",ev:"A"},
+{s:"桑名店",name:"武藤 圭祐",pre:"△",men:"△",res:"〇",sch:"△",man:"〇",cs:"〇",ev:"B"},
+{s:"桑名店",name:"加藤 将太",pre:"△",men:"〇",res:"〇",sch:"〇",man:"〇",cs:"〇",ev:"B"},
+{s:"桑名店",name:"中島 宏都",pre:"△",men:"〇",res:"◎",sch:"〇",man:"〇",cs:"◎",ev:"A"},
+{s:"員弁店",name:"内田 将司",pre:"×",men:"◎",res:"〇",sch:"◎",man:"△",cs:"◎",ev:"B"},
+{s:"員弁店",name:"小川 友宏",pre:"△",men:"〇",res:"△",sch:"◎",man:"△",cs:"◎",ev:"B"},
+{s:"員弁店",name:"渡邊 翔太",pre:"◎",men:"〇",res:"◎",sch:"◎",man:"△",cs:"◎",ev:"A"},
+{s:"四日市店",name:"井上 裕也",pre:"〇",men:"◎",res:"◎",sch:"◎",man:"◎",cs:"〇",ev:"S"},
+{s:"四日市店",name:"中村 陽一",pre:"〇",men:"◎",res:"◎",sch:"◎",man:"◎",cs:"〇",ev:"S"},
+{s:"四日市店",name:"小林 直樹",pre:"〇",men:"◎",res:"◎",sch:"◎",man:"◎",cs:"〇",ev:"S"},
+{s:"鈴鹿店",name:"永井 徳朗",pre:"◎",men:"〇",res:"〇",sch:"〇",man:"◎",cs:"〇",ev:"A"},
+{s:"鈴鹿店",name:"廣野 智",pre:"◎",men:"〇",res:"〇",sch:"〇",man:"◎",cs:"〇",ev:"A"},
+{s:"津店",name:"伊藤 洋平",pre:"〇",men:"〇",res:"◎",sch:"〇",man:"〇",cs:"〇",ev:"A"},
+{s:"津店",name:"伊藤 雅樹",pre:"△",men:"×",res:"×",sch:"×",man:"〇",cs:"△",ev:"D"},
+{s:"津店",name:"八木 雅之",pre:"×",men:"×",res:"×",sch:"×",man:"〇",cs:"△",ev:"D"},
+{s:"久居インター店",name:"西川 雄貴",pre:"△",men:"◎",res:"◎",sch:"〇",man:"〇",cs:"◎",ev:"A"},
+{s:"松阪南店",name:"宇野 優作",pre:"〇",men:"◎",res:"〇",sch:"〇",man:"△",cs:"◎",ev:"A"},
+{s:"伊勢店",name:"山路 和孝",pre:"×",men:"△",res:"×",sch:"△",man:"×",cs:"◎",ev:"D"},
+{s:"志摩店",name:"竹内 通治",pre:"×",men:"×",res:"×",sch:"×",man:"×",cs:"×",ev:"D"},
+{s:"名張店",name:"岸本 浩人",pre:"×",men:"〇",res:"◎",sch:"〇",man:"△",cs:"〇",ev:"B"},
+{s:"尾鷲店",name:"谷口 雄大",pre:"〇",men:"〇",res:"◎",sch:"〇",man:"〇",cs:"〇",ev:"A"},
+{s:"尾鷲店",name:"山本 尋矛",pre:"〇",men:"〇",res:"◎",sch:"〇",man:"〇",cs:"〇",ev:"A"}
+];
+
+const C={blue:'#4facfe',teal:'#38f9d7',purple:'#667eea',pink:'#f5576c',amber:'#f7971e',green:'#43e97b'};
+const CHART_COLORS=['#4facfe','#43e97b','#f5576c','#ffd89b','#667eea','#f093fb','#38f9d7','#ff9a56','#764ba2','#4ecdc4','#fee140','#30cfd0','#a8edea','#fed6e3','#44af69','#aa96da','#fcbad3'];
+Chart.defaults.color='rgba(255,255,255,0.6)';
+Chart.defaults.borderColor='rgba(255,255,255,0.08)';
+Chart.defaults.font.family="'Noto Sans JP',sans-serif";
+
+let charts={};
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+function makeChart(id,cfg){destroyChart(id);const ctx=document.getElementById(id);if(!ctx)return;charts[id]=new Chart(ctx,cfg)}
+
+function populateStoreSelect(){
+const sel=document.getElementById('storeSelect');
+STORES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
+}
+
+function filterData(arr,store){
+if(store==='ALL')return arr;
+return arr.filter(d=>{
+const n=d.s||d.store||'';
+return n===store||n===store+'店'||n.includes(store);
+});
+}
+
+function kpiHTML(id,items){
+document.getElementById(id).innerHTML=items.map(i=>`<div class="kpi ${i.c||'blue'}"><div class="val">${i.v}</div><div class="lbl">${i.l}</div>${i.sub?'<div class="sub-val '+i.sub_c+'">'+i.sub+'</div>':''}</div>`).join('');
+}
+
+function updateDashboard(){
+const store=document.getElementById('storeSelect').value;
+updateOverview(store);
+updateSales(store);
+updateInsurance(store);
+updateKappu(store);
+updateService(store);
+updateCS(store);
+updateMieichi(store);
+}
+
+function updateOverview(store){
+const nc=filterData(DATA_NC,store);
+const sv=filterData(DATA_SV,store);
+const totalOrdQ=nc.reduce((a,d)=>a+d.ord_q,0);
+const totalOrdF=nc.reduce((a,d)=>a+d.ord_f,0);
+const totalRegQ=nc.reduce((a,d)=>a+d.reg_q,0);
+const totalRegF=nc.reduce((a,d)=>a+d.reg_f,0);
+const avgVC=sv.length?Math.round(sv.reduce((a,d)=>a+d.vc,0)/sv.length*10)/10:0;
+const blackStores=14;
+kpiHTML('kpi-overview',[
+{v:'+300百万',l:'累計経常利益',c:'green',sub:'予算差 +197百万',sub_c:'up'},
+{v:'+46百万',l:'1月経常利益',c:'blue',sub:'予算差 +18百万',sub_c:'up'},
+{v:totalOrdF+'/'+totalOrdQ+'台',l:'新車受注 見込/割当',c:'purple'},
+{v:avgVC+'%',l:'サービスVC率(1月)',c:'orange',sub:'予算82.0%',sub_c:'down'},
+{v:blackStores+'/17店舗',l:'黒字店舗(1月累計)',c:'amber'}
+]);
+const labels=nc.map(d=>d.s);
+makeChart('chartOverviewNC',{type:'bar',data:{labels,datasets:[{label:'達成率(%)',data:nc.map(d=>d.ord_r),backgroundColor:nc.map(d=>d.ord_r>=100?'rgba(67,233,123,0.7)':'rgba(245,87,108,0.5)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},annotation:{}},scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+if(sv.length){
+const svLabels=sv.map(d=>d.s);
+makeChart('chartOverviewVC',{type:'bar',data:{labels:svLabels,datasets:[{label:'VC率(%)',data:sv.map(d=>d.vc),backgroundColor:sv.map(d=>d.vc>=50?'rgba(79,172,254,0.7)':'rgba(255,152,0,0.5)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:80,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+}
+}
+
+function updateSales(store){
+const nc=filterData(DATA_NC,store);
+const totalOrdQ=nc.reduce((a,d)=>a+d.ord_q,0);
+const totalOrdF=nc.reduce((a,d)=>a+d.ord_f,0);
+const totalRegF=nc.reduce((a,d)=>a+d.reg_f,0);
+const totalUCF=nc.reduce((a,d)=>a+d.uc_f,0);
+kpiHTML('kpi-sales',[
+{v:totalOrdF+'台',l:'新車受注見込み',c:'blue',sub:'割当'+totalOrdQ+'台',sub_c:''},
+{v:Math.round(totalOrdF/totalOrdQ*1000)/10+'%',l:'受注達成率',c:totalOrdF>=totalOrdQ?'green':'orange'},
+{v:totalRegF+'台',l:'登録見込み',c:'purple'},
+{v:totalUCF+'台',l:'中古車受注見込み',c:'amber'}
+]);
+const labels=nc.map(d=>d.s);
+makeChart('chartSalesNC',{type:'bar',data:{labels,datasets:[{label:'割当',data:nc.map(d=>d.ord_q),backgroundColor:'rgba(102,126,234,0.4)',borderRadius:4},{label:'見込み',data:nc.map(d=>d.ord_f),backgroundColor:'rgba(79,172,254,0.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+makeChart('chartSalesReg',{type:'bar',data:{labels,datasets:[{label:'割当',data:nc.map(d=>d.reg_q),backgroundColor:'rgba(102,126,234,0.4)',borderRadius:4},{label:'見込み',data:nc.map(d=>d.reg_f),backgroundColor:'rgba(67,233,123,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+let tbl='<table><tr><th>店舗</th><th>前月末残</th><th>受注割当</th><th>受注見込</th><th>達成率</th><th>登録割当</th><th>登録見込</th><th>UC割当</th><th>UC見込</th></tr>';
+nc.forEach(d=>{tbl+=`<tr><td>${d.s}</td><td>${d.prev}</td><td>${d.ord_q}</td><td>${d.ord_f}</td><td style="color:${d.ord_r>=100?C.green:C.pink}">${d.ord_r}%</td><td>${d.reg_q}</td><td>${d.reg_f}</td><td>${d.uc_q}</td><td>${d.uc_f}</td></tr>`});
+tbl+='</table>';
+document.getElementById('tableSales').innerHTML=tbl;
+}
+
+function updateInsurance(store){
+const ins=filterData(DATA_INS,store);
+const totalTgt=ins.reduce((a,d)=>a+d.tgt,0);
+const totalAct=ins.reduce((a,d)=>a+d.act,0);
+kpiHTML('kpi-ins',[
+{v:totalAct+'/'+totalTgt+'件',l:'新規獲得/目標',c:totalAct>=totalTgt?'green':'orange'},
+{v:Math.round(totalAct/Math.max(totalTgt,1)*1000)/10+'%',l:'新規達成率',c:'blue'},
+{v:Math.round(ins.reduce((a,d)=>a+d.c2_r,0)/ins.length*10)/10+'%',l:'2月継続率(平均)',c:'purple'},
+{v:Math.round(ins.reduce((a,d)=>a+d.c3_r,0)/ins.length*10)/10+'%',l:'3月継続率(平均)',c:'amber'}
+]);
+const labels=ins.map(d=>d.s);
+makeChart('chartInsNew',{type:'bar',data:{labels,datasets:[{label:'目標',data:ins.map(d=>d.tgt),backgroundColor:'rgba(102,126,234,0.4)',borderRadius:4},{label:'実績',data:ins.map(d=>d.act),backgroundColor:ins.map(d=>d.act>=d.tgt?'rgba(67,233,123,0.7)':'rgba(245,87,108,0.6)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+makeChart('chartInsCont',{type:'bar',data:{labels,datasets:[{label:'2月継続率',data:ins.map(d=>d.c2_r),backgroundColor:'rgba(79,172,254,0.7)',borderRadius:4},{label:'3月継続率',data:ins.map(d=>d.c3_r),backgroundColor:'rgba(240,147,251,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:120,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+}
+
+function updateKappu(store){
+const kp=filterData(DATA_KAPPU,store);
+const totalTgt=kp.reduce((a,d)=>a+d.tgt,0);
+const totalAct=kp.reduce((a,d)=>a+d.act,0);
+const avgRatio=kp.length?Math.round(kp.reduce((a,d)=>a+d.ratio,0)/kp.length*10)/10:0;
+kpiHTML('kpi-kappu',[
+{v:(totalAct/1000).toFixed(0)+'千/'+Math.round(totalTgt/1000)+'千円',l:'手数料 獲得/目標',c:'blue'},
+{v:Math.round(totalAct/Math.max(totalTgt,1)*1000)/10+'%',l:'手数料達成率',c:totalAct>=totalTgt?'green':'orange'},
+{v:avgRatio+'%',l:'割賦比率(平均)',c:'purple',sub:'県内平均28.6%',sub_c:avgRatio>=28.6?'up':'down'}
+]);
+const labels=kp.map(d=>d.s);
+makeChart('chartKappuFee',{type:'bar',data:{labels,datasets:[{label:'目標(千円)',data:kp.map(d=>d.tgt),backgroundColor:'rgba(102,126,234,0.4)',borderRadius:4},{label:'獲得(千円)',data:kp.map(d=>d.act),backgroundColor:kp.map(d=>d.act>=d.tgt?'rgba(67,233,123,0.7)':'rgba(245,87,108,0.6)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+makeChart('chartKappuRate',{type:'bar',data:{labels,datasets:[{label:'割賦比率(%)',data:kp.map(d=>d.ratio),backgroundColor:'rgba(79,172,254,0.7)',borderRadius:4},{label:'残価比率(%)',data:kp.map(d=>d.zan),backgroundColor:'rgba(67,233,123,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+}
+
+function updateService(store){
+const sv=filterData(DATA_SV,store);
+const avgSale=sv.length?Math.round(sv.reduce((a,d)=>a+d.sale,0)/sv.length*10)/10:0;
+const avgProf=sv.length?Math.round(sv.reduce((a,d)=>a+d.prof,0)/sv.length*10)/10:0;
+const avgVC=sv.length?Math.round(sv.reduce((a,d)=>a+d.vc,0)/sv.length*10)/10:0;
+const avgDef=sv.length?Math.round(sv.reduce((a,d)=>a+d.def,0)/sv.length*10)/10:0;
+kpiHTML('kpi-sv',[
+{v:avgSale+'%',l:'売上達成率(平均)',c:avgSale>=100?'green':'orange'},
+{v:avgProf+'%',l:'利益達成率(平均)',c:avgProf>=100?'green':'orange'},
+{v:avgVC+'%',l:'サービスVC率(平均)',c:'purple'},
+{v:avgDef+'%',l:'車検リスト防衛率(平均)',c:'blue'}
+]);
+const labels=sv.map(d=>d.s);
+makeChart('chartSvRate',{type:'bar',data:{labels,datasets:[{label:'売上達成率',data:sv.map(d=>d.sale),backgroundColor:'rgba(79,172,254,0.7)',borderRadius:4},{label:'利益達成率',data:sv.map(d=>d.prof),backgroundColor:'rgba(67,233,123,0.6)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+makeChart('chartSvDefense',{type:'bar',data:{labels,datasets:[{label:'車検防衛率',data:sv.map(d=>d.def),backgroundColor:'rgba(79,172,254,0.6)',borderRadius:4},{label:'初回車検達成率',data:sv.map(d=>d.ini_v),backgroundColor:'rgba(240,147,251,0.6)',borderRadius:4},{label:'初回12点達成率',data:sv.map(d=>d.ini_12),backgroundColor:'rgba(255,152,30,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+}
+
+function updateCS(store){
+const cs=filterData(DATA_CS,store);
+const totalTgt=cs.reduce((a,d)=>a+d.tgt,0);
+const totalM2=cs.reduce((a,d)=>a+d.m2,0);
+const totalCum=cs.reduce((a,d)=>a+d.m11+d.m12+d.m1+d.m2,0);
+kpiHTML('kpi-cs',[
+{v:totalM2+'件',l:'2月回収数(2/25時点)',c:'blue',sub:'目標 '+totalTgt+'件',sub_c:totalM2>=totalTgt?'up':'down'},
+{v:Math.round(totalM2/Math.max(totalTgt,1)*100)+'%',l:'目標達成率',c:totalM2>=totalTgt?'green':'orange'},
+{v:totalCum+'件',l:'11月〜2月 累計',c:'purple'}
+]);
+const labels=cs.map(d=>d.s);
+makeChart('chartCSTrend',{type:'line',data:{labels,datasets:[{label:'11月',data:cs.map(d=>d.m11),borderColor:'rgba(102,126,234,0.8)',backgroundColor:'rgba(102,126,234,0.1)',fill:false,tension:.3,pointRadius:3},{label:'12月',data:cs.map(d=>d.m12),borderColor:'rgba(240,147,251,0.8)',fill:false,tension:.3,pointRadius:3},{label:'1月',data:cs.map(d=>d.m1),borderColor:'rgba(67,233,123,0.8)',fill:false,tension:.3,pointRadius:3},{label:'2月',data:cs.map(d=>d.m2),borderColor:'rgba(79,172,254,1)',borderWidth:3,fill:false,tension:.3,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+makeChart('chartCSTarget',{type:'bar',data:{labels,datasets:[{label:'目標',data:cs.map(d=>d.tgt),backgroundColor:'rgba(102,126,234,0.35)',borderRadius:4},{label:'2月実績',data:cs.map(d=>d.m2),backgroundColor:cs.map(d=>d.m2>=d.tgt?'rgba(67,233,123,0.7)':'rgba(245,87,108,0.6)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'}},x:{ticks:{maxRotation:45,font:{size:10}},grid:{display:false}}}}});
+}
+
+function updateMieichi(store){
+let mie=DATA_MIE;
+if(store!=='ALL')mie=mie.filter(d=>d.s.includes(store));
+const evCount={S:0,A:0,B:0,C:0,D:0};
+mie.forEach(d=>{if(evCount[d.ev]!==undefined)evCount[d.ev]++});
+kpiHTML('kpi-mie',[
+{v:evCount.S+'名',l:'S評価',c:'amber'},
+{v:evCount.A+'名',l:'A評価',c:'green'},
+{v:evCount.B+'名',l:'B評価',c:'blue'},
+{v:(evCount.C+evCount.D)+'名',l:'C・D評価',c:'orange'}
+]);
+let tbl='<table><tr><th>店舗</th><th>スタッフ名</th><th>予習</th><th>面着</th><th>結果入力</th><th>予定入力</th><th>マンダラ</th><th>納車CS</th><th>総合</th></tr>';
+mie.forEach(d=>{
+tbl+=`<tr><td style="text-align:left">${d.s}</td><td style="text-align:left">${d.name}</td><td>${d.pre}</td><td>${d.men}</td><td>${d.res}</td><td>${d.sch}</td><td>${d.man}</td><td>${d.cs}</td><td><span class="eval-badge eval-${d.ev}">${d.ev}</span></td></tr>`;
+});
+tbl+='</table>';
+document.getElementById('tableMieichi').innerHTML=tbl;
+}
+
+function switchTab(e,id){
+document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+e.target.classList.add('active');
+setTimeout(()=>{Object.values(charts).forEach(c=>{if(c&&c.resize)c.resize()})},120);
+}
+
+populateStoreSelect();
+updateDashboard();
+</script>
+</body>
+</html>
